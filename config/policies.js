@@ -2,7 +2,7 @@
 * @Author: mars
 * @Date:   2016-12-07T14:19:33-05:00
 * @Last modified by:   mars
-* @Last modified time: 2016-12-07T23:49:51-05:00
+* @Last modified time: 2016-12-08T21:14:01-05:00
 */
 
 
@@ -49,8 +49,13 @@ module.exports.policies = {
     'login': 'isOnlyPublic',
     'signupView': 'isOnlyPublic',
     'signup': 'isOnlyPublic'
-  }
+  },
 
+  ExternalServiceController: {
+    '*': 'isAuthenticated',
+    'signupView': 'isOnlyPublic',
+    'signup': 'isOnlyPublic'
+  }
 
   /***************************************************************************
   *                                                                          *

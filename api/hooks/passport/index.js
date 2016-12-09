@@ -2,7 +2,7 @@
 * @Author: mars
 * @Date:   2016-12-08T00:32:34-05:00
 * @Last modified by:   mars
-* @Last modified time: 2016-12-08T02:38:19-05:00
+* @Last modified time: 2016-12-08T19:56:27-05:00
 */
 'use strict';
 /**
@@ -66,21 +66,19 @@ module.exports = function (sails){
         }
 
         // Teach our Passport how to serialize/dehydrate a user object into an id
-        passport.serializeUser(function(user, done) {
-          let UserModel = sails.models[sails.config.passport.userModelIdentity];
-          console.log('Using primary key', UserModel.primaryKey, 'with record:', user);
+        passport.serializeUser((user, done) => {
           done(null, user[UserModel.primaryKey]);
         });
 
         // Teach our Passport how to deserialize/hydrate an id back into a user object
-        passport.deserializeUser(function(id, done) {
-          let UserModel = sails.models[sails.config.passport.userModelIdentity];
-          UserModel.findOne(id, function(err, user) {
-            done(err, user);
+        passport.deserializeUser((id, done) => {
+          UserModel.findOne({id}).populate('externalServices')
+          .exec((err, user) => {
+            let tmpUser = Object.assign({}, user); // deep copy
+            delete tmpUser.password;
+            done(err, tmpUser);
           });
         });
-
-
 
         PassportService.localInitialization(passport, LocalStrategy, sails);
         PassportService.googleInitialization(passport, GoogleStrategy, sails);
@@ -102,10 +100,10 @@ module.exports = function (sails){
           sails.log.warn(req.query, req.body, req.user, req.session);
           sails.log.warn('------- END --------');
 
-          sails.passport.initialize()(req,res,function(err){
-            if (err) return res.negotiate(err);
-            sails.passport.session()(req,res, function (err){
-              if (err) return res.negotiate(err);
+          sails.passport.initialize()(req, res, err => {
+            if (err) { return res.negotiate(err); }
+            sails.passport.session()(req, res, err => {
+              if (err) { return res.negotiate(err); }
               next();
             });
           });

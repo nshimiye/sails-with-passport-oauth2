@@ -2,7 +2,7 @@
 * @Author: mars
 * @Date:   2016-12-07T17:35:44-05:00
 * @Last modified by:   mars
-* @Last modified time: 2016-12-07T21:53:18-05:00
+* @Last modified time: 2016-12-08T21:59:16-05:00
 */
 
 'use strict';
@@ -53,5 +53,17 @@ module.exports = {
         });
 
     });
+  },
+
+  updateModel(modelObject) {
+    return new Promise((resolve, reject) => {
+
+      modelObject.save(function(err){
+        if (err) { return reject(err); }
+        return resolve(modelObject);
+      });
+
+    });
   }
+
 };

@@ -5,6 +5,8 @@
     "Tokens",
     "Clients",
     "User",
+    "ExternalService",
+    "RawData",
 
     "UtilityService",
     "PassportService",

@@ -1,10 +1,25 @@
 <!--
 @Author: mars
-@Date:   2016-12-07T14:55:39-05:00
+@Date:   2016-12-08T00:46:07-05:00
 @Last modified by:   mars
-@Last modified time: 2016-12-07T22:04:03-05:00
+@Last modified time: 2016-12-08T22:21:49-05:00
 -->
-<h1>Welcome! You have signed up successfully!</h1>
-
-<a href="/">Back to home page</a>
-<a href="/logout">Log out</a>
+<a href="/">Back to home page</a> | <a href="/logout">Log out</a>
+<hr>
+<h1>Welcome!</h1>
+Your email: {{user.email}}
+<hr>
+Existing Services
+<ul>
+  {{#each services as |service index|}}
+    <li>Service type: {{service.serviceType}} | service user: {{service.displayName}} | id: {{service.serviceId}}</li>
+  {{/each}}
+</ul>
+<hr>
+Available services
+<div>
+  {{data}}
+</div>
+<ul>
+  <li>Google: <a href="/add/service/google-add-account">Integrate</a></li>
+</ul>
