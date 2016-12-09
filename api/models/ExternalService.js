@@ -2,7 +2,7 @@
 * @Author: mars
 * @Date:   2016-12-07T23:33:28-05:00
 * @Last modified by:   mars
-* @Last modified time: 2016-12-08T22:11:30-05:00
+* @Last modified time: 2016-12-08T23:06:33-05:00
 */
 
 'use strict';
@@ -35,8 +35,11 @@ module.exports = {
       type: 'string',
       required: true
     },
-
-    token: { // GOOGLE, LINKEDIN, TWITTER
+    active: { // \
+      type: 'boolean',
+      defaultsTo: true
+    },
+    token: { // google-<>, linkedin-<>, twitter-<>
       type: 'string',
       required: true
     },

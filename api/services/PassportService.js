@@ -2,7 +2,7 @@
 * @Author: mars
 * @Date:   2016-12-08T00:26:07-05:00
 * @Last modified by:   mars
-* @Last modified time: 2016-12-08T22:28:53-05:00
+* @Last modified time: 2016-12-08T23:03:56-05:00
 */
 'use strict';
 
@@ -109,7 +109,7 @@ module.exports = {
 
         let email = profile.emails[0].value;
         let password = 'google123456'; // @TODO generate random password
-        let serviceId = profile.id, serviceType = 'GOOGLE',
+        let serviceId = `google-${profile.id}`, serviceType = 'GOOGLE',
         displayName = profile.displayName, emails = profile.emails, rawList = [{current: true, content: profile}];
         let externalServices = [{ serviceId, serviceType, token, refreshToken, displayName, emails, rawList }];
 
@@ -163,7 +163,7 @@ module.exports = {
           // if !req.user => say user does not exist =>
           if(!req.user) { return done(null, false, { message: 'user does not exist' }); }
 
-          let serviceId = profile.id, serviceType = 'GOOGLE',
+          let serviceId = `google-${profile.id}`, serviceType = 'GOOGLE',
           displayName = profile.displayName, emails = profile.emails, raw = { current: true, content: profile };
           let externalService = { serviceId, serviceType, token, refreshToken, displayName, emails, rawList: [raw] };
 
@@ -178,6 +178,12 @@ module.exports = {
             // set current field of current rawData to false
             // then add rawData to rawList
             if(foundExternalService) {
+
+              foundExternalService.token = token;
+              foundExternalService.refreshToken = refreshToken;
+              foundExternalService.displayName = displayName;
+              foundExternalService.emails = emails; // @TODO add if different instead of set
+
               // START set current field of current rawData to false
               let rawList = foundExternalService.rawList;
               let currentRaw = rawList.find(r => r.current);
