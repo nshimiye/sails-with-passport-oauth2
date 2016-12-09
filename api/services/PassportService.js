@@ -2,7 +2,7 @@
 * @Author: mars
 * @Date:   2016-12-08T00:26:07-05:00
 * @Last modified by:   mars
-* @Last modified time: 2016-12-08T23:03:56-05:00
+* @Last modified time: 2016-12-09T12:02:52-05:00
 */
 'use strict';
 
@@ -110,8 +110,8 @@ module.exports = {
         let email = profile.emails[0].value;
         let password = 'google123456'; // @TODO generate random password
         let serviceId = `google-${profile.id}`, serviceType = 'GOOGLE',
-        displayName = profile.displayName, emails = profile.emails, rawList = [{current: true, content: profile}];
-        let externalServices = [{ serviceId, serviceType, token, refreshToken, displayName, emails, rawList }];
+        displayName = profile.displayName, identification = profile.emails, rawList = [{current: true, content: profile}];
+        let externalServices = [{ serviceId, serviceType, token, refreshToken, displayName, identification, rawList }];
 
 
         // @TODO
@@ -130,9 +130,6 @@ module.exports = {
       // @TODO if all goes well we should send an email to the user
       // @TODO asking them to change their password
     }));
-
-
-
 
     // =========================================================================
     // ADD GOOGLE TO EXISTING USER ==================================================================
@@ -164,8 +161,8 @@ module.exports = {
           if(!req.user) { return done(null, false, { message: 'user does not exist' }); }
 
           let serviceId = `google-${profile.id}`, serviceType = 'GOOGLE',
-          displayName = profile.displayName, emails = profile.emails, raw = { current: true, content: profile };
-          let externalService = { serviceId, serviceType, token, refreshToken, displayName, emails, rawList: [raw] };
+          displayName = profile.displayName, identification = profile.emails, raw = { current: true, content: profile };
+          let externalService = { serviceId, serviceType, token, refreshToken, displayName, identification, rawList: [raw] };
 
           // @TODO check for existence first
           // return UtilityService.Model(ExternalService).findOne({ serviceId, serviceType })
@@ -182,7 +179,7 @@ module.exports = {
               foundExternalService.token = token;
               foundExternalService.refreshToken = refreshToken;
               foundExternalService.displayName = displayName;
-              foundExternalService.emails = emails; // @TODO add if different instead of set
+              foundExternalService.identification = identification; // @TODO add if different instead of set
 
               // START set current field of current rawData to false
               let rawList = foundExternalService.rawList;

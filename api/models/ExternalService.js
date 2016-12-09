@@ -2,7 +2,7 @@
 * @Author: mars
 * @Date:   2016-12-07T23:33:28-05:00
 * @Last modified by:   mars
-* @Last modified time: 2016-12-08T23:06:33-05:00
+* @Last modified time: 2016-12-09T11:46:36-05:00
 */
 
 'use strict';
@@ -35,7 +35,7 @@ module.exports = {
       type: 'string',
       required: true
     },
-    active: { // \
+    active: { // there is no delete, just hide and show
       type: 'boolean',
       defaultsTo: true
     },
@@ -52,10 +52,15 @@ module.exports = {
       type: 'string',
       required: false
     },
-    emails: { // [ ... ]
+    identification: { // emails, usernames, phonenumbers => [ ... ]
       type: 'json',
       required: false
     },
-
+    // we may need different pieces on information
+    // depending on what service we are using
+    // meta is a place for storing service specific info
+    meta: {
+      type: 'json'
+    }
   }
 };

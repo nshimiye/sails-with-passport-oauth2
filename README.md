@@ -2,7 +2,7 @@
 @Author: mars
 @Date:   2016-12-08T03:30:09-05:00
 @Last modified by:   mars
-@Last modified time: 2016-12-08T21:13:52-05:00
+@Last modified time: 2016-12-09T12:10:58-05:00
 -->
 
 # sails-with-passport-oauth2
@@ -29,7 +29,31 @@ npm install bcrypt passport passport-local passport-google-oauth --save
 
 * Follow instructions from [sails-with-passport](https://github.com/nshimiye/sails-with-passport-oauth2) to setup passport
 
-* Add logic to add googleStrategyto passport
+* Configure oauthServers settings
+```javascript
+// config/oauthServers.js
+module.exports.oauthServers = {
+  serverStrategyMap: {
+    'google-signup': 'signupGoogleAuth',
+    'google-add-account': 'addGoogleAuth'
+  },
+  'signupGoogleAuth' : {
+      'clientID'      : 'google-client-id',
+      'clientSecret'  : 'google-client-secret',
+      'callbackURL'   : 'http://localhost:1337/signup/google/callback',
+      'scope': ['email', 'profile']
+  },
+
+  'addGoogleAuth' : {
+      'clientID'      : 'google-client-id',
+      'clientSecret'  : 'google-client-secret',
+      'callbackURL'   : 'http://localhost:1337/add/service/callback/google-add-account',
+      'scope': ['email', 'profile']
+  }
+}
+```
+
+* Add logic to add googleStrategy passport
 ```javascript
 // api/hooks/passport/index.js
 ...
@@ -47,7 +71,7 @@ sails generate model externalService serviceId:string serviceType:string
 ```
 [link to Code for externalService model]()
 
-* Add required to manage signup with gmail
+* Add required logic to manage signup with gmail
 ```javascript
 // api/controllers/ExternalServiceController.js
 
@@ -112,17 +136,15 @@ signup(req, res) {
 'get /signup/google': 'ExternalServiceController.signupView', // redirect to google
 'get /signup/google/callback': 'ExternalServiceController.signup',
 
+'get /add/service/:strategy': 'ExternalServiceController.addToExistingAccountView', // redirect to google
+'get /add/service/callback/:strategy': 'ExternalServiceController.addToExistingAccount'
 ...
 ```
 
-*
-
-
 * Testing
   * Run the app `sails lift`
-  * open url []() in the browser
-  * click [signup]()
-  * input email and password, then hit submit
+  * open url [http://localhost:1337/](http://localhost:1337/) in the browser
+  * click signup link [http://localhost:1337/signup/google](http://localhost:1337/signup/google)
   * There you are!!
   * Now you can access the logged in user info by calling `req.user`.
   * Moreover, the `req.session` has a passport object in it `req.session.passport`.
