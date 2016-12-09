@@ -2,7 +2,7 @@
 @Author: mars
 @Date:   2016-12-08T03:30:09-05:00
 @Last modified by:   mars
-@Last modified time: 2016-12-09T12:10:58-05:00
+@Last modified time: 2016-12-09T12:15:15-05:00
 -->
 
 # sails-with-passport-oauth2
@@ -144,7 +144,7 @@ signup(req, res) {
 * Testing
   * Run the app `sails lift`
   * open url [http://localhost:1337/](http://localhost:1337/) in the browser
-  * click signup link [http://localhost:1337/signup/google](http://localhost:1337/signup/google)
+  * click on signup link [http://localhost:1337/signup/google](http://localhost:1337/signup/google)
   * There you are!!
   * Now you can access the logged in user info by calling `req.user`.
   * Moreover, the `req.session` has a passport object in it `req.session.passport`.
