@@ -2,7 +2,7 @@
 * @Author: mars
 * @Date:   2016-12-07T14:19:33-05:00
 * @Last modified by:   mars
-* @Last modified time: 2016-12-08T21:20:22-05:00
+* @Last modified time: 2016-12-09T13:54:12-05:00
 */
 
 /**
@@ -67,8 +67,8 @@ module.exports.routes = {
     controller: 'UserController',
     action: 'welcome'
    },
-  'get /signup/google': 'ExternalServiceController.signupView', // redirect to google
-  'get /signup/google/callback': 'ExternalServiceController.signup',
+  'get /signup/service/:strategy': 'ExternalServiceController.signupView', // redirect to google
+  'get /signup/service/callback/:strategy': 'ExternalServiceController.signup',
 
   'get /add/service/:strategy': 'ExternalServiceController.addToExistingAccountView', // redirect to google
   'get /add/service/callback/:strategy': 'ExternalServiceController.addToExistingAccount',

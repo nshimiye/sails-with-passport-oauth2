@@ -2,7 +2,7 @@
 * @Author: mars
 * @Date:   2016-12-07T23:33:28-05:00
 * @Last modified by:   mars
-* @Last modified time: 2016-12-08T22:41:32-05:00
+* @Last modified time: 2016-12-09T13:53:30-05:00
 */
 
 'use strict';
@@ -32,8 +32,7 @@ module.exports = {
   // send to google to do the authentication
   // profile gets us their basic information including their name
   // email gets their emails
-  * @FUTURE GET <host>/signup/service
-  * GET <host>/signup/google
+  * GET <host>/signup/service/:strategy
   * `ExternalServiceController.signup()`
   */
   signupView(req, res, next) {

@@ -2,7 +2,7 @@
 * @Author: mars
 * @Date:   2016-12-08T00:32:34-05:00
 * @Last modified by:   mars
-* @Last modified time: 2016-12-08T19:56:27-05:00
+* @Last modified time: 2016-12-09T17:52:48-05:00
 */
 'use strict';
 /**
@@ -11,7 +11,8 @@
 
  const passport = require('passport'),
  LocalStrategy = require('passport-local').Strategy,
- GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
+ GoogleStrategy = require('passport-google-oauth').OAuth2Strategy,
+ SlackStrategy = require('passport-slack').Strategy;
 
 
 /**
@@ -82,6 +83,7 @@ module.exports = function (sails){
 
         PassportService.localInitialization(passport, LocalStrategy, sails);
         PassportService.googleInitialization(passport, GoogleStrategy, sails);
+        PassportService.slackInitialization(passport, SlackStrategy, sails);
 
 
         sails.passport = passport;

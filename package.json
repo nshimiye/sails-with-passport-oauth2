@@ -24,6 +24,7 @@
     "passport": "^0.3.2",
     "passport-google-oauth": "^1.0.0",
     "passport-local": "^1.0.0",
+    "passport-slack": "0.0.7",
     "rc": "1.0.1",
     "sails": "~0.12.11",
     "sails-disk": "~0.10.9"

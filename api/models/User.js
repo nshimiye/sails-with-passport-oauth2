@@ -2,7 +2,7 @@
 * @Author: mars
 * @Date:   2016-12-07T14:48:16-05:00
 * @Last modified by:   mars
-* @Last modified time: 2016-12-08T17:39:19-05:00
+* @Last modified time: 2016-12-09T17:21:05-05:00
 */
 'use strict';
 
@@ -32,6 +32,9 @@ module.exports = {
       type: 'string',
       minLength: 6,
       required: true
+    },
+    meta: { // save service specific info ex slack-user, slack-team
+      type: 'json'
     },
     comparePassword(password) {
       // https://www.npmjs.com/package/bcrypt#with-promises

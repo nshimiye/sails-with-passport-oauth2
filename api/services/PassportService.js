@@ -2,7 +2,7 @@
 * @Author: mars
 * @Date:   2016-12-08T00:26:07-05:00
 * @Last modified by:   mars
-* @Last modified time: 2016-12-09T12:02:52-05:00
+* @Last modified time: 2016-12-09T17:53:47-05:00
 */
 'use strict';
 
@@ -88,7 +88,7 @@ module.exports = {
     // code for twitter (use('twitter', new TwitterStrategy))
 
     // =========================================================================
-    // SIGNUP WITH GOOGLE ==================================================================
+    // SIGNUP WITH GOOGLE ======================================================
     // =========================================================================
     passport.use('google-signup', new GoogleStrategy({
 
@@ -185,7 +185,7 @@ module.exports = {
               let rawList = foundExternalService.rawList;
               let currentRaw = rawList.find(r => r.current);
               return (!currentRaw)? Promise.resolve(false) :
-                    UtilityService.Model(RawData).update({ id: currentRaw.id }, { current: false })
+              UtilityService.Model(RawData).update({ id: currentRaw.id }, { current: false })
               // END set current field of current rawData to false
 
               .then(( /* @TODO */ ) => {
@@ -231,5 +231,61 @@ module.exports = {
 
     }));
 
-  }
+  },
+  slackInitialization(passport, SlackStrategy, sails) {
+
+    // =========================================================================
+    // SIGNUP WITH GOOGLE ======================================================
+    // =========================================================================
+
+    passport.use('slack-signup', new SlackStrategy({
+
+      clientID        : sails.config.oauthServers.signupSlackAuth.clientID,
+      clientSecret    : sails.config.oauthServers.signupSlackAuth.clientSecret,
+      callbackURL     : sails.config.oauthServers.signupSlackAuth.callbackURL,
+      skipUserProfile : false // default
+    },
+    (token, refreshToken, profile, done) => {
+      // optionally persist user data into a database
+
+
+
+      // make the code asynchronous
+      // User.findOne won't fire until we have all our data back from Google
+      process.nextTick(function() {
+        sails.log.debug('--------------- START googleInitialization------------------------');
+        sails.log.debug(token, refreshToken, profile.id);
+        sails.log.debug('---------------END googleInitialization----------------------');
+
+        let teamId = profile.team.id, userId = profile.id,
+            teamDomain = profile.domain;
+        let email = profile.user.email;
+        let password = 'slack123456'; // @TODO generate random password
+        let serviceId = `slack-${profile.team.id}-${profile.id}`, serviceType = 'SLACK',
+        displayName = profile.displayName, identification = [profile.user], rawList = [{current: true, content: profile}];
+        let meta = { teamId, userId, teamDomain };
+        let externalServices = [{ serviceId, serviceType, token, refreshToken, displayName, identification, meta, rawList }];
+
+        // @TODO
+        // try to create a new user object along with the service object
+        UtilityService.Model(User).create({
+          email,
+          password,
+          externalServices
+        }).then(newUser => {
+          return done(null, newUser);
+        })
+        .catch(e => done(null, false, { message: e && e.message || 'No user found.' }));
+
+      });
+
+      // @TODO if all goes well we should send an email to the user
+      // @TODO asking them to change their password
+
+
+
+
+    }
+  ));
+}
 };
