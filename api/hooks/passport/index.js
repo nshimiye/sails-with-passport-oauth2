@@ -2,13 +2,12 @@
 * @Author: mars
 * @Date:   2016-12-08T00:32:34-05:00
 * @Last modified by:   mars
-* @Last modified time: 2016-12-09T17:52:48-05:00
+* @Last modified time: 2016-12-20T12:26:14-05:00
 */
 'use strict';
 /**
  * Module dependencies
  */
-
  const passport = require('passport'),
  LocalStrategy = require('passport-local').Strategy,
  GoogleStrategy = require('passport-google-oauth').OAuth2Strategy,

@@ -2,7 +2,7 @@
 * @Author: mars
 * @Date:   2016-12-08T00:26:07-05:00
 * @Last modified by:   mars
-* @Last modified time: 2016-12-09T17:53:47-05:00
+* @Last modified time: 2016-12-20T12:26:35-05:00
 */
 'use strict';
 
@@ -281,9 +281,6 @@ module.exports = {
 
       // @TODO if all goes well we should send an email to the user
       // @TODO asking them to change their password
-
-
-
 
     }
   ));
