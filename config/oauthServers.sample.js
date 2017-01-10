@@ -2,7 +2,7 @@
 * @Author: mars
 * @Date:   2016-12-07T23:08:37-05:00
 * @Last modified by:   mars
-* @Last modified time: 2016-12-09T13:43:01-05:00
+* @Last modified time: 2017-01-10T15:44:32-05:00
 */
 
 // config/oauthServers.js
@@ -21,20 +21,21 @@ let oauthServers = {
     'facebookAuth': {
         'clientID'      : 'your-secret-clientID-here', // your App ID
         'clientSecret'  : 'your-client-secret-here', // your App Secret
-        'callbackURL'   : 'http://localhost:8080/auth/facebook/callback'
+        'callbackURL'   : 'http://localhost:1337/signup/service/callback/facebook-signup'
     },
 
     'twitterAuth' : {
         'consumerKey'       : 'your-consumer-key-here',
         'consumerSecret'    : 'your-client-secret-here',
-        'callbackURL'       : 'http://localhost:8080/auth/twitter/callback'
+        'callbackURL'       : 'http://localhost:1337/signup/service/callback/twitter-signup'
     },
 
     'signupSlackAuth' : {
-      'clientID'      : 'google-client-id',
-      'clientSecret'  : 'google-client-secret',
-      'callbackURL'   : 'http://localhost:1337/signup/service/callback/slack-signup',
-      'scope': ['email', 'profile']
+      'clientID'          : 'slack-client-id',
+      'clientSecret'      : 'slack-client-secret',
+      'verificationToken' : 'qyttRQvGwEk1IAmxp7bGF4j3',
+      'callbackURL'       : 'http://localhost:1337/signup/service/callback/slack-signup',
+      'scope'             : ['bot', 'commands']
     },
 
     'addSlackAuth' : {
