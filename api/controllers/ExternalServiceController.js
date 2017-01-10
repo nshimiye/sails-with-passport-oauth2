@@ -2,7 +2,7 @@
 * @Author: mars
 * @Date:   2016-12-07T23:33:28-05:00
 * @Last modified by:   mars
-* @Last modified time: 2017-01-10T15:46:09-05:00
+* @Last modified time: 2017-01-10T16:18:46-05:00
 */
 
 'use strict';
@@ -40,9 +40,10 @@ module.exports = {
     let strategy = req.params.strategy;
     let serviceAuth = sails.config.oauthServers.serverStrategyMap[strategy];
     let oauthServer = sails.config.oauthServers[serviceAuth];
-    let scope = (oauthServer || {}).scope || ['profile', 'email'];
-
-    sails.passport.authenticate(strategy, { scope })(req, res, next);
+    let scope = (oauthServer || {}).scope;
+    let meta = (oauthServer || {}).meta || {}; // in case service has custom options
+    let options = Object.assign({}, { scope }, meta );
+    sails.passport.authenticate(strategy, options)(req, res, next);
   },
 
   /**

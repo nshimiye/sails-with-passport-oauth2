@@ -2,7 +2,7 @@
 * @Author: mars
 * @Date:   2016-12-12T13:34:33-05:00
 * @Last modified by:   mars
-* @Last modified time: 2017-01-10T13:13:47-05:00
+* @Last modified time: 2017-01-10T17:45:28-05:00
 */
 /**
  EFS
@@ -22,7 +22,7 @@ let externalServices = {
     template: {
       logoUrl: '/assets/images/slack.png',
       name: 'Slack',
-      description: 'Connect your slack account with SAM to keep updated with your emails.',
+      description: 'Slack message analytics',
       newButton: '<img src="/assets/images/slack.png" alt="slack-image"> Add to Slack',
       existingButton: 'Dashboard'
     }
@@ -33,6 +33,15 @@ let externalServices = {
       logoUrl: '/assets/images/google.png',
       name: 'Google',
       description: 'Google data analytics',
+      newButton: '+',
+      existingButton: 'Dashboard'
+    }
+  },
+  'salesforce': {
+    template: {
+      logoUrl: '/assets/images/google.png',
+      name: 'Salesforce',
+      description: 'Salesforce data analytics',
       newButton: '+',
       existingButton: 'Dashboard'
     }

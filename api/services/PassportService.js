@@ -2,7 +2,7 @@
 * @Author: mars
 * @Date:   2016-12-08T00:26:07-05:00
 * @Last modified by:   mars
-* @Last modified time: 2017-01-10T15:40:00-05:00
+* @Last modified time: 2017-01-10T17:44:41-05:00
 */
 'use strict';
 
@@ -574,6 +574,121 @@ module.exports = {
 
 
 
-}
+},
 
+
+
+salesforceInitialization(passport, SalesforceStrategy, sails) {
+
+  // code for login (use('local-login', new LocalStategy))
+  // code for signup (use('local-signup', new LocalStategy))
+  // code for facebook (use('facebook', new FacebookStrategy))
+  // code for twitter (use('twitter', new TwitterStrategy))
+
+  // =========================================================================
+  // SIGNUP WITH GOOGLE ======================================================
+  // =========================================================================
+  passport.use('salesforce-signup', new SalesforceStrategy({
+
+    clientID        : sails.config.oauthServers.signupSalesforceAuth.clientID,
+    clientSecret    : sails.config.oauthServers.signupSalesforceAuth.clientSecret,
+    callbackURL     : sails.config.oauthServers.signupSalesforceAuth.callbackURL,
+    passReqToCallback : true // allows us to pass back the entire request to the callback
+
+  },
+  function(req, token, refreshToken, profile, done) {
+
+    // make the code asynchronous
+    // User.findOne won't fire until we have all our data back from Google
+    process.nextTick(function() {
+      /*jshint camelcase: false */
+
+      sails.log.debug('--------------- START salesforceInitialization  -------------------');
+      sails.log.debug(token, refreshToken, profile);
+      sails.log.debug('--------------- END salesforceInitialization ----------------------');
+
+      // profile = { user_id, organization_id, email, zoneinfo, name }
+
+      let serviceId = `salesforce-${profile.user_id}-${profile.organization_id}`, serviceType = 'SALESFORCE',
+      displayName = profile.name, identification = [profile], raw = [{current: true, content: profile}];
+      let externalService = { serviceId, serviceType, token, refreshToken, displayName, identification, rawList: [raw] };
+
+
+
+      return UtilityService.runDBQuery(
+        ExternalService.findOne({ serviceId, serviceType }).populate('rawList')
+      )
+    .then(foundExternalService => {
+
+      // START service exist, we update important fields {token, refreshToken, displayName}
+      if (!foundExternalService) {
+        return Promise.resolve(externalService);
+      } else {
+
+          foundExternalService.token = externalService.token;
+          foundExternalService.refreshToken = externalService.refreshToken;
+          foundExternalService.displayName = externalService.displayName;
+          foundExternalService.identification = externalService.identification; // @TODO add if different instead of set
+
+        let rawList = foundExternalService.rawList;
+        let currentRaw = rawList.find(r => r.current);
+        return UtilityService.Model(RawData).update({ id: currentRaw.id }, { current: false })
+        // END set current field of current rawData to false
+        .then(( /* @TODO */ ) => {
+
+          // START add rawData to existing externalService
+          foundExternalService.rawList.add(raw);
+          return UtilityService.updateModel(foundExternalService);
+          // return Promise<foundExternalService>
+          // END add rawData to existing externalService
+
+        });
+      } // return externalService
+      // END service exist, we update important fields {token, refreshToken, displayName}
+
+
+    })
+    .then(foundNotFoundService => {
+      let externalServices = [foundNotFoundService];
+
+        // check for user existence
+        let email = profile.email;
+        return UtilityService.Model(User).findOne({ email })
+        .then(foundUser => {
+
+          if(!foundUser) {
+            let password = 'salesforce123456'; // @TODO generate random password
+            // try to create a new user object along with the service object
+            return UtilityService.Model(User).create({
+              email,
+              password,
+              externalServices
+            }); // return user
+          } else {
+            // `${email} is associated with existing account!`;
+
+            // update the service, make sure service is attached to this found user
+            // what happens when this service is already attached to the user => it does not get readded,
+            //     test showed that sailsjs is smart enough to figure out that there is existing connection between service and user
+            foundUser.externalServices.add(foundNotFoundService);
+            return UtilityService.updateModel(foundUser)
+            .then(( /* modelObject */ ) => Promise.resolve(foundUser))
+            .catch(( /* e */ ) => Promise.resolve(foundUser));
+          }
+
+        });
+
+      })
+  .then(newUser => {
+    return done(null, newUser);
+  })
+  .catch(e => done(null, false, { message: e && e.message || 'No user found.' }));
+
+    });
+
+    // @TODO if all goes well we should send an email to the user
+    // @TODO asking them to change their password
+  }));
+
+}
 };

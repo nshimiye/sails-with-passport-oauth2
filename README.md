@@ -2,7 +2,7 @@
 @Author: mars
 @Date:   2016-12-08T03:30:09-05:00
 @Last modified by:   mars
-@Last modified time: 2017-01-10T14:17:14-05:00
+@Last modified time: 2017-01-10T17:54:18-05:00
 -->
 
 # sails-with-passport-oauth2
@@ -24,63 +24,62 @@ sails new sails-with-passport-oauth2
 
 * Install passport related packages
 ```sh
-npm install bcrypt passport passport-local passport-slack --save
+npm install bcryptjs passport passport-local passport-salesforce --save
 ```
 
 * Follow instructions from [sails-with-passport](https://github.com/nshimiye/sails-with-passport-oauth2) to setup passport
+
+* Follow instructions from  [Salesforce Development Page](https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_defining_remote_access_applications.htm)
+to setup Oauth2 credentials
+
+`Setup > Build > Apps > Connected Apps > New`
 
 * Configure oauthServers settings
 ```javascript
 // config/oauthServers.js
 module.exports.oauthServers = {
   serverStrategyMap: {
-    'slack-signup'       : 'signupSlackAuth',
-    'slack-add-account'  : 'addSlackAuth'
+    'salesforce-signup'       : 'signupSalesforceAuth',
+    'salesforce-add-account'  : 'addSalesforceAuth'
   },
-  'signupSlackAuth'     : {
-    'clientID'          : 'slack-client-id',
-    'clientSecret'      : 'slack-client-secret',
-    'verificationToken' : 'slack-verification-token',
-    'callbackURL'       : `${HOST}/signup/service/callback/slack-signup`,
+  'signupSalesforceAuth'     : {
+    'clientID'          : 'salesforce-client-id', // consumer Key
+    'clientSecret'      : 'salesforce-client-secret', // consumer Secret
+    'callbackURL'       : `${HOST}/signup/service/callback/salesforce-signup`,
     'scope'             : ['bot', 'commands']
   },
 
-  'addSlackAuth'        : {
-    'clientID'          : 'slack-client-id',
-    'clientSecret'      : 'slack-client-secret',
-    'verificationToken' : 'slack-verification-token',
-    'callbackURL'       : `${HOST}/add/service/callback/slack-add-account`,
+  'addSalesforceAuth'        : {
+    'clientID'          : 'salesforce-client-id',
+    'clientSecret'      : 'salesforce-client-secret',
+    'callbackURL'       : `${HOST}/add/service/callback/salesforce-add-account`,
     'scope'             : ['bot', 'commands']
   }
 
 }
 ```
 
-* Add slack data access endpoint to the `externalServices` config file
+* Add salesforce data access endpoint to the `externalServices` config file
 ```javascript
 // config/externalServices.js
 module.exports.externalServices = {
 ...
-'slack': {
-  SLACK_TEAM_INFO_API: 'https://slack.com/api/team.info',
-  SLACK_USERS_INFO_API: 'https://slack.com/api/users.info',
-  SLACK_IM_LIST_API: 'https://slack.com/api/im.list', // DIRECT_CHANNELS
-  SLACK_CHANNELS_LIST_API: 'https://slack.com/api/channels.list',
-  SLACK_AUTH_TEST: 'https://slack.com/api/auth.test'
+'salesforce': {
+  // user api endpoints
 },
 ...
 };
 ```
 
 
-* Add logic to add slackStrategy passport
+* Add logic to add SalesforceStrategy passport
 ```javascript
 // api/hooks/passport/index.js
 ...
-PassportService.slackInitialization(passport, SlackStrategy, sails);
+PassportService.salesforceInitialization(passport, SalesforceStrategy, sails);
 ...
 ```
-[code for PassportService.slackInitialization]()
+[code for PassportService.salesforceInitialization]()
 
 * Create the externalService model and controller
 ```sh
@@ -97,15 +96,18 @@ sails generate model externalService serviceId:string serviceType:string
 
 // GET <host>/signup/slack
 signupView(req, res, next) {
-  let scope = sails.config.oauthServers.signupSlackAuth.scope;
+  let scope = sails.config.oauthServers.signupSalesforceAuth.scope;
   sails.passport.authenticate('slack-signup', { scope })(req, res, next);
+  sails.passport.authenticate('salesforce-signup', { scope })(req, res, next);
 },
 
 ...
 
 // GET <host>/signup/slack/callback
+// GET <host>/signup/salesforce/callback
 signup(req, res) {
   sails.passport.authenticate('slack-signup', function(err, user, info) {
+  sails.passport.authenticate('salesforce-signup', function(err, user, info) {
     sails.log.debug('------------------ START signup------------------');
     sails.log.debug(err, user, info);
     sails.log.debug('------------------ END signup--------------------');
@@ -113,7 +115,9 @@ signup(req, res) {
       return res.badRequest(info && info.message || 'Wrong Signup information', { view: 'user/signup' });
     }
     req.logIn(user, function(err) {
-      if (err) { return res.badRequest(err && err.message || 'Invalid username/password combination.', { view: 'user/signup' }); }
+      if (err) {
+        return res.badRequest(err && err.message || 'Invalid username/password combination.', { view: 'user/signup' });
+      }
       return res.redirect('/profile');
     });
 
@@ -122,16 +126,15 @@ signup(req, res) {
 ...
 
 // api/services/PassportService.js
-// we are using credetials from "signupSlackAuth"
+// we are using credetials from "signupSalesforceAuth"
 ...
-passport.use('slack-signup', new SlackStrategy({
-  clientID        : sails.config.oauthServers.signupSlackAuth.clientID,
-  clientSecret    : sails.config.oauthServers.signupSlackAuth.clientSecret,
-  callbackURL     : sails.config.oauthServers.signupSlackAuth.callbackURL,
-  skipUserProfile : true, // default
+passport.use('salesforce-signup', new SlackStrategy({
+  clientID        : sails.config.oauthServers.signupSalesforceAuth.clientID,
+  clientSecret    : sails.config.oauthServers.signupSalesforceAuth.clientSecret,
+  callbackURL     : sails.config.oauthServers.signupSalesforceAuth.callbackURL,
   passReqToCallback : true // allows us to pass back the entire request to the callback
 },
-(req, token, refreshToken, params, profileNone, done) => {
+(req, token, refreshToken, params, profile, done) => {
 ...
 ```
 
@@ -162,6 +165,7 @@ passport.use('slack-signup', new SlackStrategy({
 // config/routes.js
 ...
 // for slack service
+// for salesforce service
 'get /profile': {
   controller: 'UserController',
   action: 'welcome'
@@ -170,8 +174,8 @@ passport.use('slack-signup', new SlackStrategy({
    controller: 'ExternalServiceController',
    action: 'profile'
   },
-'get /signup/slack': 'ExternalServiceController.signupView', // redirect to slack
-'get /signup/slack/callback': 'ExternalServiceController.signup',
+  'get /signup/service/:strategy': 'ExternalServiceController.signupView',
+  'get /signup/service/callback/:strategy': 'ExternalServiceController.signup',
 
 'get /add/service/:strategy': 'ExternalServiceController.addToExistingAccountView', // redirect to slack
 'get /add/service/callback/:strategy': 'ExternalServiceController.addToExistingAccount'
@@ -181,7 +185,7 @@ passport.use('slack-signup', new SlackStrategy({
 * Testing
   * Run the app `sails lift`
   * open url [http://localhost:1337/](http://localhost:1337/) in the browser
-  * click on signup link [http://localhost:1337/signup/slack](http://localhost:1337/signup/slack)
+  * click on signup link [http://localhost:1337/signup/salesforce](http://localhost:1337/signup/salesforce)
   * There you are!!
   * Now you can access the logged in user info by calling `req.user`.
   * Moreover, the `req.session` has a passport object in it `req.session.passport`.
