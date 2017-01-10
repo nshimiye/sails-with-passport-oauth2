@@ -2,7 +2,7 @@
 * @Author: mars
 * @Date:   2016-12-07T14:35:45-05:00
 * @Last modified by:   mars
-* @Last modified time: 2016-12-07T22:54:38-05:00
+* @Last modified time: 2017-01-10T14:03:40-05:00
 */
 'use strict';
 /**
@@ -15,7 +15,7 @@
  *
  */
 module.exports = function(req, res, next) {
-  sails.log.warn('test', req.isAuthenticated, req.session, req.user);
+  sails.log.verbose('test', req.isAuthenticated, req.session, req.user);
   if (!req.isAuthenticated()) {
        return next();
    }

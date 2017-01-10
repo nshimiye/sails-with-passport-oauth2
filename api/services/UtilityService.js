@@ -2,7 +2,7 @@
 * @Author: mars
 * @Date:   2016-12-07T17:35:44-05:00
 * @Last modified by:   mars
-* @Last modified time: 2016-12-08T21:59:16-05:00
+* @Last modified time: 2017-01-10T13:11:31-05:00
 */
 
 'use strict';
@@ -21,11 +21,14 @@ module.exports = {
             // return promisify(this.model.create)(attributes);
         },
 
+        find: function (criteria) {
+          return this.US.runDBQuery(this.modelInstance.find(criteria));
+            // return promisify(this.model.findOne)(criteria);
+        },
         findOne: function (criteria) {
           return this.US.runDBQuery(this.modelInstance.findOne(criteria));
             // return promisify(this.model.findOne)(criteria);
         },
-
         findOrCreate: function (criteria, attributes) {
           return this.US.runDBQuery(this.modelInstance.findOrCreate(criteria, attributes));
             // return promisify(this.model.findOrCreate)(criteria, attributes);
@@ -63,6 +66,16 @@ module.exports = {
         return resolve(modelObject);
       });
 
+    });
+  },
+
+  /**
+   * @param object Object<{...}>
+   * @param attributes Array<string>
+   */
+  isEmpty(object, attributes) {
+    return (attributes || Object.keys(object)).some((key /*, index, array */) => {
+      return !object[key];
     });
   }
 

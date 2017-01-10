@@ -2,16 +2,16 @@
 * @Author: mars
 * @Date:   2016-12-08T00:32:34-05:00
 * @Last modified by:   mars
-* @Last modified time: 2016-12-08T19:56:27-05:00
+* @Last modified time: 2017-01-10T13:59:44-05:00
 */
 'use strict';
 /**
  * Module dependencies
  */
-
  const passport = require('passport'),
  LocalStrategy = require('passport-local').Strategy,
- GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
+ GoogleStrategy = require('passport-google-oauth').OAuth2Strategy,
+ SlackStrategy = require('passport-slack').Strategy;
 
 
 /**
@@ -82,6 +82,7 @@ module.exports = function (sails){
 
         PassportService.localInitialization(passport, LocalStrategy, sails);
         PassportService.googleInitialization(passport, GoogleStrategy, sails);
+        PassportService.slackInitialization(passport, SlackStrategy, sails);
 
 
         sails.passport = passport;
@@ -96,9 +97,9 @@ module.exports = function (sails){
     routes: {
       before: {
         '/*': function configurePassport(req, res, next) {
-          sails.log.warn('------- START --------');
-          sails.log.warn(req.query, req.body, req.user, req.session);
-          sails.log.warn('------- END --------');
+          sails.log.verbose('------- START --------');
+          sails.log.verbose(req.query, req.body, req.user, req.session);
+          sails.log.verbose('------- END --------');
 
           sails.passport.initialize()(req, res, err => {
             if (err) { return res.negotiate(err); }

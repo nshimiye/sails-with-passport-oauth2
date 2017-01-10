@@ -24,7 +24,10 @@
     "passport": "^0.3.2",
     "passport-google-oauth": "^1.0.0",
     "passport-local": "^1.0.0",
+    "passport-slack": "0.0.7",
+    "q": "^1.4.1",
     "rc": "1.0.1",
+    "request": "^2.79.0",
     "sails": "~0.12.11",
     "sails-disk": "~0.10.9"
   },

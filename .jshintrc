@@ -10,9 +10,8 @@
 
     "UtilityService",
     "PassportService",
-    "OAuth",
-    "Registration",
-    "ExternalServerRegistration"
+    "ExternalServerRegistration",
+    "NetworkService"
   ],
   "node": true,
   "esnext": true,

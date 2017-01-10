@@ -2,7 +2,7 @@
 * @Author: mars
 * @Date:   2016-12-08T00:26:07-05:00
 * @Last modified by:   mars
-* @Last modified time: 2016-12-09T12:02:52-05:00
+* @Last modified time: 2017-01-10T15:40:00-05:00
 */
 'use strict';
 
@@ -88,7 +88,7 @@ module.exports = {
     // code for twitter (use('twitter', new TwitterStrategy))
 
     // =========================================================================
-    // SIGNUP WITH GOOGLE ==================================================================
+    // SIGNUP WITH GOOGLE ======================================================
     // =========================================================================
     passport.use('google-signup', new GoogleStrategy({
 
@@ -112,7 +112,6 @@ module.exports = {
         let serviceId = `google-${profile.id}`, serviceType = 'GOOGLE',
         displayName = profile.displayName, identification = profile.emails, rawList = [{current: true, content: profile}];
         let externalServices = [{ serviceId, serviceType, token, refreshToken, displayName, identification, rawList }];
-
 
         // @TODO
         // try to create a new user object along with the service object
@@ -160,6 +159,9 @@ module.exports = {
           // if !req.user => say user does not exist =>
           if(!req.user) { return done(null, false, { message: 'user does not exist' }); }
 
+
+
+
           let serviceId = `google-${profile.id}`, serviceType = 'GOOGLE',
           displayName = profile.displayName, identification = profile.emails, raw = { current: true, content: profile };
           let externalService = { serviceId, serviceType, token, refreshToken, displayName, identification, rawList: [raw] };
@@ -185,7 +187,7 @@ module.exports = {
               let rawList = foundExternalService.rawList;
               let currentRaw = rawList.find(r => r.current);
               return (!currentRaw)? Promise.resolve(false) :
-                    UtilityService.Model(RawData).update({ id: currentRaw.id }, { current: false })
+              UtilityService.Model(RawData).update({ id: currentRaw.id }, { current: false })
               // END set current field of current rawData to false
 
               .then(( /* @TODO */ ) => {
@@ -231,5 +233,347 @@ module.exports = {
 
     }));
 
+  },
+  slackInitialization(passport, SlackStrategy, sails) {
+    let SLACK_USERS_INFO_API = sails.config.externalServices.slack.SLACK_USERS_INFO_API;
+    let SLACK_AUTH_TEST = sails.config.externalServices.slack.SLACK_AUTH_TEST;
+    let SLACK_TEAM_INFO_API = sails.config.externalServices.slack.SLACK_TEAM_INFO_API;
+
+    // =========================================================================
+    // SIGNUP WITH SLACK ======================================================
+    // =========================================================================
+    passport.use('slack-signup', new SlackStrategy({
+      clientID        : sails.config.oauthServers.signupSlackAuth.clientID,
+      clientSecret    : sails.config.oauthServers.signupSlackAuth.clientSecret,
+      callbackURL     : sails.config.oauthServers.signupSlackAuth.callbackURL,
+      skipUserProfile : true, // default
+      passReqToCallback : true // allows us to pass back the entire request to the callback
+    }, // req, accessToken, refreshToken, params, profile, done
+    // (req, token, refreshToken, profile, done) => { // @TODO slack does not offer refreshToken
+    (req, token, refreshToken, params, profileNone, done) => {
+      // optionally persist user data into a database
+
+      // make the code asynchronous
+      // User.findOne won't fire until we have all our data back from Google
+      process.nextTick(function() {
+        /*jshint camelcase: false */
+        try {
+
+          sails.log.debug('--------------- START slackInitialization------------------------');
+          sails.log.debug(token, refreshToken, params, profileNone);
+          sails.log.debug('---------------END slackInitialization----------------------');
+
+          // let bot = params.bot || {};
+          let teamId = params.team_id;
+          let userId = params.user_id;
+          let botUserId = params.bot.bot_user_id;
+          let botAccessToken = params.bot.bot_access_token;
+
+          let profile = {};
+          // get team
+          // https://slack.com/api/team.info?token=xoxb-118959069141-je67sETpbLr9xdt11WutWCdm&pretty=1
+
+          // fetch team web url
+          let uri = `${SLACK_TEAM_INFO_API}?token=${botAccessToken}`, method = 'GET', headers = { 'content-type': 'application/json;charset=UTF-8' };
+          return NetworkService.makeRequest(uri, { method, headers })
+          .then(teamInfo => { // => { ok, team: { id, domain } }
+            sails.log.debug('--------------- START SLACK_USERS_INFO_API------------------------');
+            sails.log.debug(teamInfo);
+            sails.log.debug('---------------END SLACK_USERS_INFO_API----------------------');
+            let team = teamInfo.team;
+            profile = Object.assign({}, profile, { team });
+
+
+
+          // get user
+          // https://slack.com/api/users.info?token=<botAccessToken>&user=<user_id>
+
+          // fetch current slack-user info
+          let uri = `${SLACK_USERS_INFO_API}?token=${botAccessToken}&user=${userId}`, method = 'GET', headers = { 'content-type': 'application/json;charset=UTF-8' };
+          return NetworkService.makeRequest(uri, { method, headers });
+        })
+          .then(userInfo => { // => { ok, user: { id, tz, name, is_bot, profile.email } }
+            sails.log.debug('--------------- START SLACK_USERS_INFO_API------------------------');
+            sails.log.debug(userInfo.user.profile.email);
+            sails.log.debug('---------------END SLACK_USERS_INFO_API----------------------');
+            let user = userInfo.user; //
+                user.email = user.profile.email;
+            profile = Object.assign({}, profile, { user });
+
+            // fetch bot-user info
+            // add bot info to the profile
+            let uri = `${SLACK_USERS_INFO_API}?token=${botAccessToken}&user=${botUserId}`, method = 'GET', headers = { 'content-type': 'application/json;charset=UTF-8' };
+            return NetworkService.makeRequest(uri, { method, headers });
+          })
+            .then(botInfo => { // => { ok, user: { id, name, is_bot } }
+              let bot = botInfo.user;
+              profile = Object.assign({}, profile, { bot });
+
+
+
+            // profile = { team, user, bot }
+          profile.provider = 'Slack';
+          profile.id = profile.user.id;
+          profile.displayName = profile.user.name;
+
+          let teamDomain = profile.team.domain;
+          let botName = profile.bot.name;
+          let timeZone = profile.user.tz;
+          let userName = profile.user.name;
+          let serviceId = `slack-${profile.team.id}-${profile.id}`, serviceType = 'SLACK',
+          displayName = profile.displayName, identification = [profile.user],
+          meta = { teamId, userId, teamDomain, botUserId, userName, timeZone, botName, botAccessToken }, raw = { current: true, content: profile };
+
+          let externalService = { serviceId, serviceType, token, refreshToken, displayName, identification, meta, rawList: [raw] };
+
+
+          // fetch team web url
+          let uri = `${SLACK_AUTH_TEST}?token=${botAccessToken}`,
+              method = 'GET', headers = { 'content-type': 'application/json;charset=UTF-8' };
+          return NetworkService.makeRequest(uri, { method, headers })
+          .then(testInfo => { // => { ok, url, team }
+            let teamUrl = testInfo.url;
+            let teamName = testInfo.team;
+            meta = Object.assign({}, meta, { teamUrl, teamName });
+            externalService.meta = meta;
+
+            // @TODO redundant [exist in google-signup]
+            // check for existence first
+            // return UtilityService.Model(ExternalService).findOne({ serviceId, serviceType })
+            return UtilityService.runDBQuery(
+              ExternalService.findOne({ serviceId, serviceType }).populate('rawList')
+            );
+
+          })
+          .then(foundExternalService => {
+            return (foundExternalService)? Promise.resolve(foundExternalService) : Promise.resolve(externalService);
+          });
+
+          // return externalService
+          })
+          .then(foundNotFoundService => {
+            let externalServices = [foundNotFoundService];
+
+            sails.log.debug('--------------- START about to save user ----------------------');
+            sails.log.debug(profile, profile.user);
+            sails.log.debug('--------------- END about to save user   ----------------------');
+
+
+              // check for user existence
+              let email = profile.user.email;
+              return UtilityService.Model(User).findOne({ email })
+              .then(foundUser => {
+
+                if(!foundUser) {
+                  let password = 'slack123456'; // @TODO generate random password
+                  // try to create a new user object along with the service object
+                  return UtilityService.Model(User).create({
+                    email,
+                    password,
+                    externalServices
+                  }); // return user
+                } else {
+                  // `${email} is associated with existing account!`;
+
+                  // update the service, make sure service is attached to this found user
+                  // what happens when this service is already attached to the user => it does not get readded,
+                  //     test showed that sailsjs is smart enough to figure out that there is existing connection between service and user
+                  foundUser.externalServices.add(foundNotFoundService);
+                  return UtilityService.updateModel(foundUser)
+                  .then(( modelObject ) => {
+                    sails.log.warn('------------------ START add service to existing user------------------');
+                    sails.log.warn(modelObject);
+                    sails.log.warn('------------------ END add service to existing user--------------------');
+                    return Promise.resolve(foundUser); })
+                  .catch(( e ) => {
+                    sails.log.error('------------------ START add service to existing user------------------');
+                    sails.log.error(e);
+                    sails.log.error('------------------ END add service to existing user--------------------');
+                    return Promise.resolve(foundUser); });
+                }
+
+              });
+
+            })
+        .then(newUser => {
+          return done(null, newUser);
+        })
+        .catch(e => done(null, false, { message: e && e.message || 'No user found.' }));
+        // END SAVE new user
+
+      } catch(e){ done(null, false, { message:  e.message || 'Oops! unknown error occured...' }); }
+
+
+    });
+      // @TODO if all goes well we should send an email to the user
+      // @TODO asking them to change their password
+
+    }
+  ));
+
+
+
+  // =========================================================================
+  // ADD SLACK TO EXISTING USER ======================================================
+  // =========================================================================
+  passport.use('slack-add-account', new SlackStrategy({
+    clientID        : sails.config.oauthServers.addSlackAuth.clientID,
+    clientSecret    : sails.config.oauthServers.addSlackAuth.clientSecret,
+    callbackURL     : sails.config.oauthServers.addSlackAuth.callbackURL,
+    skipUserProfile : true, // default
+    passReqToCallback : true // allows us to pass back the entire request to the callback
+  }, // req, accessToken, refreshToken, params, profile, done
+  // (req, token, refreshToken, profile, done) => { // @TODO slack does not offer refreshToken
+  (req, token, refreshToken, params, profileNone, done) => {
+    // optionally persist user data into a database
+
+    // make the code asynchronous
+    // User.findOne won't fire until we have all our data back from Google
+    process.nextTick(function() {
+      /*jshint camelcase: false */
+
+      try {
+
+        // if !req.user => say user does not exist =>
+        let user = req.user;
+        if(!user) { return done(null, false, { message: 'user does not exist' }); }
+
+        // @TODO
+        sails.log.debug('--------------- START slackInitialization------------------------');
+        sails.log.debug(token, refreshToken, params, profileNone);
+        sails.log.debug('---------------END slackInitialization----------------------');
+
+        // let bot = params.bot || {};
+        let teamId = params.team_id;
+        let userId = params.user_id;
+        let botUserId = params.bot.bot_user_id;
+        let botAccessToken = params.bot.bot_access_token;
+
+
+        let profile = {};
+        // get team
+        // https://slack.com/api/team.info?token=xoxb-118959069141-je67sETpbLr9xdt11WutWCdm&pretty=1
+
+        // fetch team web url
+        let uri = `${SLACK_TEAM_INFO_API}?token=${botAccessToken}`, method = 'GET', headers = { 'content-type': 'application/json;charset=UTF-8' };
+        return NetworkService.makeRequest(uri, { method, headers })
+        .then(teamInfo => { // => { ok, team: { id, domain } }
+          sails.log.debug('--------------- START SLACK_USERS_INFO_API------------------------');
+          sails.log.debug(teamInfo);
+          sails.log.debug('---------------END SLACK_USERS_INFO_API----------------------');
+          let team = teamInfo.team;
+          profile = Object.assign({}, profile, { team });
+
+
+
+        // get user
+        // https://slack.com/api/users.info?token=<botAccessToken>&user=<user_id>
+
+        // fetch current slack-user info
+        let uri = `${SLACK_USERS_INFO_API}?token=${botAccessToken}&user=${userId}`, method = 'GET', headers = { 'content-type': 'application/json;charset=UTF-8' };
+        return NetworkService.makeRequest(uri, { method, headers });
+      })
+        .then(userInfo => { // => { ok, user: { id, tz, name, is_bot } }
+          sails.log.debug('--------------- START SLACK_USERS_INFO_API------------------------');
+          sails.log.debug(userInfo);
+          sails.log.debug('---------------END SLACK_USERS_INFO_API----------------------');
+          let user = userInfo.user;
+          profile = Object.assign({}, profile, { user });
+
+          // fetch bot-user info
+          // add bot info to the profile
+          let uri = `${SLACK_USERS_INFO_API}?token=${botAccessToken}&user=${botUserId}`, method = 'GET', headers = { 'content-type': 'application/json;charset=UTF-8' };
+          return NetworkService.makeRequest(uri, { method, headers });
+        })
+          .then(botInfo => { // => { ok, user: { id, name, is_bot } }
+            let bot = botInfo.user;
+            profile = Object.assign({}, profile, { bot });
+
+
+
+          // profile = { team, user, bot }
+        profile.provider = 'Slack';
+        profile.id = profile.user.id;
+        profile.displayName = profile.user.name;
+
+        let teamDomain = profile.team.domain;
+        let botName = profile.bot.name;
+        let timeZone = profile.user.tz;
+        let userName = profile.user.name;
+        let serviceId = `slack-${profile.team.id}-${profile.id}`, serviceType = 'SLACK',
+        displayName = profile.displayName, identification = [profile.user],
+        meta = { teamId, userId, teamDomain, botUserId, userName, timeZone, botName, botAccessToken }, raw = { current: true, content: profile };
+
+        let externalService = { serviceId, serviceType, token, refreshToken, displayName, identification, meta, rawList: [raw] };
+
+
+        // fetch team web url
+        let uri = `${SLACK_AUTH_TEST}?token=${botAccessToken}`, method = 'GET', headers = { 'content-type': 'application/json;charset=UTF-8' };
+        return NetworkService.makeRequest(uri, { method, headers })
+        .then(testInfo => { // => { ok, url, team }
+          let teamUrl = testInfo.url;
+          let teamName = testInfo.team;
+          meta = Object.assign({}, meta, { teamUrl, teamName });
+          externalService.meta = meta;
+
+          // @TODO redundant [exist in google-signup]
+          // check for existence first
+          // return UtilityService.Model(ExternalService).findOne({ serviceId, serviceType })
+          return UtilityService.runDBQuery(
+            ExternalService.findOne({ serviceId, serviceType }).populate('rawList')
+          );
+
+        })
+        .then(foundExternalService => {
+          return (foundExternalService)? Promise.resolve(foundExternalService) : Promise.resolve(externalService);
+        }); // return externalService
+        })
+        .then(foundNotFoundService => {
+          // else we now check to see if this service is part of user.externalServices
+
+          // if (userBoundService) {
+          //   return Promise.resolve(userBoundService);
+          // } // else
+          // return
+
+          // START add externalService to user
+          // add new record to user.externalServices
+          // update user
+          // then save
+          let id = user.id; // assume that UserModel = User and UserModel.primaryKey = id
+          return UtilityService.Model(User).findOne({ id })
+          .then(foundUser => {
+            foundUser.externalServices.add(foundNotFoundService);
+            return UtilityService.updateModel(foundUser)
+            .then(( /* modelObject */ ) => Promise.resolve(foundNotFoundService));
+          });
+          // END add externalService to user
+
+        })
+
+        .then(newService => {
+          sails.log.debug('------------------ START slack-add-account------------------');
+          sails.log.debug(newService);
+          sails.log.debug('------------------ END slack-add-account--------------------');
+          return done(null, newService, { message: 'all good!'});
+        })
+        .catch(e => done(null, false, { message: e && e.message || 'Problem while integrating slack' }));
+
+
+
+      } catch(e){ done(null, false, { message:  e.message || 'Oops! unknown error occured...' }); }
+
+
+    });
+
+
   }
+));
+
+
+
+
+
+}
+
 };

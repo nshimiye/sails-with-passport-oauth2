@@ -2,7 +2,7 @@
 * @Author: mars
 * @Date:   2016-12-07T23:33:28-05:00
 * @Last modified by:   mars
-* @Last modified time: 2016-12-08T22:41:32-05:00
+* @Last modified time: 2017-01-10T15:46:09-05:00
 */
 
 'use strict';
@@ -32,13 +32,12 @@ module.exports = {
   // send to google to do the authentication
   // profile gets us their basic information including their name
   // email gets their emails
-  * @FUTURE GET <host>/signup/service
-  * GET <host>/signup/google
+  * GET <host>/signup/service/:strategy
   * `ExternalServiceController.signup()`
   */
   signupView(req, res, next) {
 
-    let strategy = req.params.strategy || 'google-signup';
+    let strategy = req.params.strategy;
     let serviceAuth = sails.config.oauthServers.serverStrategyMap[strategy];
     let oauthServer = sails.config.oauthServers[serviceAuth];
     let scope = (oauthServer || {}).scope || ['profile', 'email'];
@@ -47,8 +46,7 @@ module.exports = {
   },
 
   /**
-  * @FUTURE GET <host>/signup/service/callback/:strategy
-  * GET <host>/signup/google/callback
+  * GET <host>/signup/service/callback/:strategy
   * `ExternalServiceController.signup()`
   */
   signup(req, res, next) {
@@ -56,7 +54,7 @@ module.exports = {
     sails.log.debug(req.query, req.body, Object.keys(sails.passport) );
     sails.log.debug('---------------------------------------');
 
-    let strategy = req.params.strategy || 'google-signup';
+    let strategy = req.params.strategy;
     sails.passport.authenticate(strategy, function(err, user, info) {
       sails.log.debug('------------------ START signup------------------');
       sails.log.debug(err, user, info);
