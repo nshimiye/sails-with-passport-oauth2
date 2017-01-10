@@ -2,7 +2,7 @@
 * @Author: mars
 * @Date:   2016-12-08T00:26:07-05:00
 * @Last modified by:   mars
-* @Last modified time: 2017-01-10T17:44:41-05:00
+* @Last modified time: 2017-01-10T18:04:45-05:00
 */
 'use strict';
 
@@ -590,9 +590,9 @@ salesforceInitialization(passport, SalesforceStrategy, sails) {
   // =========================================================================
   passport.use('salesforce-signup', new SalesforceStrategy({
 
-    clientID        : sails.config.oauthServers.signupSalesforceAuth.clientID,
-    clientSecret    : sails.config.oauthServers.signupSalesforceAuth.clientSecret,
-    callbackURL     : sails.config.oauthServers.signupSalesforceAuth.callbackURL,
+    clientID        : sails.config.oauthServers.addSalesforceAuth.clientID,
+    clientSecret    : sails.config.oauthServers.addSalesforceAuth.clientSecret,
+    callbackURL     : sails.config.oauthServers.addSalesforceAuth.callbackURL,
     passReqToCallback : true // allows us to pass back the entire request to the callback
 
   },
@@ -690,5 +690,128 @@ salesforceInitialization(passport, SalesforceStrategy, sails) {
     // @TODO asking them to change their password
   }));
 
+
+
+
+
+
+  // =========================================================================
+  // ADD GOOGLE TO EXISTING USER ==================================================================
+  // =========================================================================
+  // Fetch user
+  //
+  passport.use('salesforce-add-account', new SalesforceStrategy({
+
+    clientID        : sails.config.oauthServers.addGoogleAuth.clientID,
+    clientSecret    : sails.config.oauthServers.addGoogleAuth.clientSecret,
+    callbackURL     : sails.config.oauthServers.addGoogleAuth.callbackURL,
+    passReqToCallback : true // allows us to pass back the entire request to the callback
+
+  },
+  function(req, token, refreshToken, profile, done) {
+
+
+    // make the code asynchronous
+    // User.findOne won't fire until we have all our data back from Google
+    process.nextTick(function() {
+      /*jshint camelcase: false */
+      try {
+        sails.log.debug('--------------- START googleInitialization------------------------');
+        sails.log.debug(token, refreshToken, profile.id);
+        sails.log.debug('---------------END googleInitialization----------------------');
+
+
+        // if !req.user => say user does not exist =>
+        let user = req.user;
+        if(!user) { return done(null, false, { message: 'user does not exist' }); }
+
+
+
+        sails.log.debug('--------------- START salesforceInitialization  -------------------');
+        sails.log.debug(token, refreshToken, profile);
+        sails.log.debug('--------------- END salesforceInitialization ----------------------');
+
+        // profile = { user_id, organization_id, email, zoneinfo, name }
+
+        let serviceId = `salesforce-${profile.user_id}-${profile.organization_id}`, serviceType = 'SALESFORCE',
+        displayName = profile.name, identification = [profile], raw = [{current: true, content: profile}];
+        let externalService = { serviceId, serviceType, token, refreshToken, displayName, identification, rawList: [raw] };
+
+        return UtilityService.runDBQuery(
+          ExternalService.findOne({ serviceId, serviceType }).populate('rawList')
+        )
+      .then(foundExternalService => {
+
+        // START service exist, we update important fields {token, refreshToken, displayName}
+        if (foundExternalService) {
+
+            foundExternalService.token = externalService.token;
+            foundExternalService.refreshToken = externalService.refreshToken;
+            foundExternalService.displayName = externalService.displayName;
+            foundExternalService.identification = externalService.identification; // @TODO add if different instead of set
+
+          let rawList = foundExternalService.rawList;
+          let currentRaw = rawList.find(r => r.current);
+          return UtilityService.Model(RawData).update({ id: currentRaw.id }, { current: false })
+          // END set current field of current rawData to false
+          .then(( /* @TODO */ ) => {
+
+            // START add rawData to existing externalService
+            foundExternalService.rawList.add(raw);
+            return UtilityService.updateModel(foundExternalService);
+            // return Promise<foundExternalService>
+            // END add rawData to existing externalService
+
+          });
+        } // return externalService
+        // END service exist, we update important fields {token, refreshToken, displayName}
+
+        return Promise.resolve(externalService);
+
+      })
+        .then(foundNotFoundService => {
+          // else we now check to see if this service is part of user.externalServices
+
+          // if (userBoundService) {
+          //   return Promise.resolve(userBoundService);
+          // } // else
+          // return
+
+          // START add externalService to user
+          // add new record to user.externalServices
+          // update user
+          // then save
+          // let user = req.user;
+          let id = user.id; // assume that UserModel = User and UserModel.primaryKey = id
+          return UtilityService.Model(User).findOne({ id })
+          .then(foundUser => {
+            foundUser.externalServices.add(foundNotFoundService);
+            return UtilityService.updateModel(foundUser)
+            .then(( /* modelObject */ ) => Promise.resolve(foundNotFoundService));
+          });
+          // END add externalService to user
+
+        })
+        .then(newService => {
+          sails.log.debug('------------------ START salesforce-add-account------------------');
+          sails.log.debug(newService);
+          sails.log.debug('------------------ END salesforce-add-account--------------------');
+          return done(null, newService, { message: 'all good!'});
+        })
+        .catch(e => done(null, false, { message: e && e.message || 'No user found.' }));
+
+
+      } catch(e) { done(null, false, { message: e && e.message || 'No user found.' });}
+    });
+
+  }));
+
+
+
+
+
+
 }
+
+
 };
