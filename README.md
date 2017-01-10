@@ -2,7 +2,7 @@
 @Author: mars
 @Date:   2016-12-08T03:30:09-05:00
 @Last modified by:   mars
-@Last modified time: 2017-01-10T14:17:14-05:00
+@Last modified time: 2017-01-10T15:57:52-05:00
 -->
 
 # sails-with-passport-oauth2
@@ -181,7 +181,7 @@ passport.use('slack-signup', new SlackStrategy({
 * Testing
   * Run the app `sails lift`
   * open url [http://localhost:1337/](http://localhost:1337/) in the browser
-  * click on signup link [http://localhost:1337/signup/slack](http://localhost:1337/signup/slack)
+  * click on signup link [http://localhost:1337/signup/service/slack-signup](http://localhost:1337/signup/service/slack-signup)
   * There you are!!
   * Now you can access the logged in user info by calling `req.user`.
   * Moreover, the `req.session` has a passport object in it `req.session.passport`.
