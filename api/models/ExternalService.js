@@ -2,7 +2,7 @@
 * @Author: mars
 * @Date:   2016-12-07T23:33:28-05:00
 * @Last modified by:   mars
-* @Last modified time: 2016-12-09T11:46:36-05:00
+* @Last modified time: 2017-01-10T15:10:28-05:00
 */
 
 'use strict';
@@ -11,6 +11,24 @@
  * ExternalService.js
  *
  * @description ::
+ ```javascript
+// api/models/ExternalService.js
+For SLACK
+ExternalService : {
+  meta: {
+    userId: [string],
+    teamId: [string],
+    teamDomain: [string],
+    teamName: [string],
+    teamUrl: [string],
+    timeZone: [string],
+    botUserId: [string],
+    botAccessToken: [string],
+    userName: [string],
+    botName: [string]
+  }
+}
+```
  * @docs        :: http://sailsjs.org/documentation/concepts/models-and-orm/models
  */
 module.exports = {

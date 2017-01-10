@@ -2,7 +2,7 @@
 * @Author: mars
 * @Date:   2016-12-07T23:33:28-05:00
 * @Last modified by:   mars
-* @Last modified time: 2016-12-09T13:53:30-05:00
+* @Last modified time: 2017-01-10T14:17:16-05:00
 */
 
 'use strict';
@@ -46,8 +46,7 @@ module.exports = {
   },
 
   /**
-  * @FUTURE GET <host>/signup/service/callback/:strategy
-  * GET <host>/signup/google/callback
+  * GET <host>/signup/service/callback/:strategy
   * `ExternalServiceController.signup()`
   */
   signup(req, res, next) {
@@ -55,7 +54,7 @@ module.exports = {
     sails.log.debug(req.query, req.body, Object.keys(sails.passport) );
     sails.log.debug('---------------------------------------');
 
-    let strategy = req.params.strategy || 'google-signup';
+    let strategy = req.params.strategy;
     sails.passport.authenticate(strategy, function(err, user, info) {
       sails.log.debug('------------------ START signup------------------');
       sails.log.debug(err, user, info);
