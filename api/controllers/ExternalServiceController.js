@@ -2,7 +2,7 @@
 * @Author: mars
 * @Date:   2016-12-07T23:33:28-05:00
 * @Last modified by:   mars
-* @Last modified time: 2017-01-10T14:17:16-05:00
+* @Last modified time: 2017-01-10T15:46:09-05:00
 */
 
 'use strict';
@@ -37,7 +37,7 @@ module.exports = {
   */
   signupView(req, res, next) {
 
-    let strategy = req.params.strategy || 'google-signup';
+    let strategy = req.params.strategy;
     let serviceAuth = sails.config.oauthServers.serverStrategyMap[strategy];
     let oauthServer = sails.config.oauthServers[serviceAuth];
     let scope = (oauthServer || {}).scope || ['profile', 'email'];
