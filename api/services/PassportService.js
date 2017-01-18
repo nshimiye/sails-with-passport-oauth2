@@ -2,7 +2,7 @@
 * @Author: mars
 * @Date:   2016-12-08T00:26:07-05:00
 * @Last modified by:   mars
-* @Last modified time: 2017-01-10T15:40:00-05:00
+* @Last modified time: 2017-01-18T15:08:20-05:00
 */
 'use strict';
 
@@ -107,22 +107,126 @@ module.exports = {
         sails.log.debug(token, refreshToken, profile.id);
         sails.log.debug('---------------END googleInitialization----------------------');
 
-        let email = profile.emails[0].value;
-        let password = 'google123456'; // @TODO generate random password
-        let serviceId = `google-${profile.id}`, serviceType = 'GOOGLE',
-        displayName = profile.displayName, identification = profile.emails, rawList = [{current: true, content: profile}];
-        let externalServices = [{ serviceId, serviceType, token, refreshToken, displayName, identification, rawList }];
+        let emailAddress = profile.emails[0].value;
+        let profileId = profile.emails[0].value;
+        let timeZone = profile.timeZone; // @TODO how do u get user timeZone
+        // displayName = profile.displayName, identification = profile.emails, rawList = [{current: true, content: profile}];
+        // let externalService = { serviceId, serviceType, token, refreshToken, displayName, identification, rawList };
 
-        // @TODO
-        // try to create a new user object along with the service object
-        UtilityService.Model(User).create({
-          email,
-          password,
-          externalServices
-        }).then(newUser => {
+        let serviceId = `google-${profile.id}`, serviceType = 'GOOGLE',
+        displayName = profile.displayName, identification = [profile.user],
+        meta = { emailAddress, profileId, timeZone }, raw = { current: true, content: profile };
+
+        let externalService = { serviceId, serviceType, token, refreshToken, displayName, identification, meta, rawList: [raw] };
+
+
+      // @TODO redundant [exist in google-signup]
+      // check for existence first
+      // return UtilityService.Model(ExternalService).findOne({ serviceId, serviceType })
+      return UtilityService.runDBQuery(
+        ExternalService.findOne({ serviceId, serviceType }).populate('rawList')
+      )
+
+
+
+      // START update service information
+      .then(foundExternalService => {
+
+        if(!foundExternalService) {
+          return Promise.resolve(externalService);
+        }
+
+        // START update existing external-service
+          foundExternalService.token = token;
+          foundExternalService.refreshToken = refreshToken;
+          foundExternalService.displayName = displayName;
+          foundExternalService.identification = identification; // @TODO add if different instead of set
+
+          // START set current field of current rawData to false
+          let rawList = foundExternalService.rawList;
+          let currentRaw = rawList.find(r => r.current);
+
+          let id = currentRaw && currentRaw.id;
+          return UtilityService.Model(RawData).update({ id }, { current: false })
+          // END set current field of current rawData to false
+
+          .then(( /* @TODO */ ) => {
+
+            // START add rawData to existing externalService
+            foundExternalService.rawList.add(raw);
+            return UtilityService.updateModel(foundExternalService);
+            // return Promise<foundExternalService>
+            // END add rawData to existing externalService
+
+          });
+        // END update existing external-service
+
+
+      })// return externalService
+      // END update service information
+
+
+
+
+        // START login in user if provided email is already used @TODO
+        // @ASSUMPTION: if a service(slack) is using an email-address from another service(gmail),
+        //  then we assume that this [service(slack)]-user is the owner of the account of the other service(gmail)
+        // @WARNING this may become a security issue in the future
+        .then(foundNotFoundService => {
+          let externalServices = [foundNotFoundService];
+
+          sails.log.debug('--------------- START about to save user ----------------------');
+          sails.log.debug(profile, profile.user);
+          sails.log.debug('--------------- END about to save user   ----------------------');
+
+
+            // check for user existence
+            let email = profile.emails[0].value;
+            return UtilityService.Model(User).findOne({ email })
+            .then(foundUser => {
+
+              if(!foundUser) {
+                let password = 'google123456'; // @TODO generate random password
+                // try to create a new user object along with the service object
+                return UtilityService.Model(User).create({
+                  email,
+                  password,
+                  externalServices
+                }); // return user
+              } else {
+                // `${email} is associated with existing account!`;
+
+                // update the service, make sure service is attached to this found user
+                // what happens when this service is already attached to the user => it does not get readded,
+                //     test showed that sailsjs is smart enough to figure out that there is existing connection between service and user
+                foundUser.externalServices.add(foundNotFoundService);
+                return UtilityService.updateModel(foundUser)
+                .then(( modelObject ) => {
+                  sails.log.warn('------------------ START add service to existing user------------------');
+                  sails.log.warn(modelObject);
+                  sails.log.warn('------------------ END add service to existing user--------------------');
+                  return Promise.resolve(foundUser); })
+                .catch(( e ) => {
+                  sails.log.error('------------------ START add service to existing user------------------');
+                  sails.log.error(e);
+                  sails.log.error('------------------ END add service to existing user--------------------');
+                  return Promise.resolve(foundUser); });
+              }
+
+            });
+
+          })
+          // END login in user if provided email is already used @TODO
+
+
+        .then(newUser => {
           return done(null, newUser);
         })
         .catch(e => done(null, false, { message: e && e.message || 'No user found.' }));
+
+
+
+
 
       });
 

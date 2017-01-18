@@ -2,7 +2,7 @@
 * @Author: mars
 * @Date:   2016-12-07T14:19:33-05:00
 * @Last modified by:   mars
-* @Last modified time: 2016-12-08T22:29:12-05:00
+* @Last modified time: 2017-01-18T14:44:26-05:00
 */
 
 
@@ -36,8 +36,8 @@ module.exports.models = {
   * See http://sailsjs.org/#!/documentation/concepts/ORM/model-settings.html  *
   *                                                                          *
   ***************************************************************************/
-  migrate: 'drop'
+  // migrate: 'drop'
   // migrate: 'alter'
-  // migrate: 'safe'
+  migrate: 'safe'
 
 };

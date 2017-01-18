@@ -2,7 +2,7 @@
 * @Author: mars
 * @Date:   2016-12-07T14:48:16-05:00
 * @Last modified by:   mars
-* @Last modified time: 2016-12-08T19:47:55-05:00
+* @Last modified time: 2017-01-18T15:26:53-05:00
 */
 'use strict';
 
@@ -25,9 +25,17 @@ module.exports = {
     sails.log.debug(req.query, req.body, Object.keys(req.user), Object.keys(req.session), req.user && req.user.externalServices);
     sails.log.debug('---------------------------------------');
 
+    let externalServices = sails.config.externalServices;
+    let services = req.user.externalServices;
+    services = services.map(service => {
+      let serviceTypeLowerCased = service.serviceType.toLowerCase();
+      service.api = externalServices[serviceTypeLowerCased];
+      return service;
+    });
+
     res.view({
       user: req.user,
-      services: req.user.externalServices
+      services
     });
   },
   loginView(req, res) {

@@ -2,7 +2,7 @@
 * @Author: mars
 * @Date:   2016-12-12T13:34:33-05:00
 * @Last modified by:   mars
-* @Last modified time: 2017-01-10T13:13:47-05:00
+* @Last modified time: 2017-01-18T15:22:17-05:00
 */
 /**
  EFS
@@ -10,6 +10,7 @@
  - DEV: 54.174.27.160
  - AWON: 172.17.2.53
  * config/externalServices.js
+ * each object is bound to the service data (as api) during execution
  */
 let externalServices = {
 
@@ -19,6 +20,7 @@ let externalServices = {
     SLACK_IM_LIST_API: 'https://slack.com/api/im.list', // DIRECT_CHANNELS
     SLACK_CHANNELS_LIST_API: 'https://slack.com/api/channels.list',
     SLACK_AUTH_TEST: 'https://slack.com/api/auth.test',
+    REVOKE_TOKEN_API: 'https://slack.com/api/auth.revoke',
     template: {
       logoUrl: '/assets/images/slack.png',
       name: 'Slack',

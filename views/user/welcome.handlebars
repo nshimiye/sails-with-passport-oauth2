@@ -2,7 +2,7 @@
 @Author: mars
 @Date:   2016-12-08T00:46:07-05:00
 @Last modified by:   mars
-@Last modified time: 2016-12-09T21:30:02-05:00
+@Last modified time: 2017-01-18T15:21:26-05:00
 -->
 <a href="/">Back to home page</a> | <a href="/logout">Log out</a>
 <hr>
@@ -16,7 +16,7 @@ Existing Services
 <ul>
   {{#each services as |service index|}}
     <li>Service type: {{service.serviceType}} | service user: {{service.displayName}}
-      | id: {{service.serviceId}} | <a href="https://accounts.google.com/o/oauth2/revoke?token={{service.token}}">Revoke access</a></li>
+      | id: {{service.serviceId}} | <a href="{{service.api.REVOKE_TOKEN_API}}?token={{service.token}}">Revoke access</a></li>
   {{/each}}
 </ul>
 <hr>

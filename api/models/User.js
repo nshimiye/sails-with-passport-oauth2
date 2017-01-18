@@ -2,7 +2,7 @@
 * @Author: mars
 * @Date:   2016-12-07T14:48:16-05:00
 * @Last modified by:   mars
-* @Last modified time: 2016-12-09T17:21:05-05:00
+* @Last modified time: 2017-01-18T14:08:38-05:00
 */
 'use strict';
 
@@ -12,7 +12,7 @@
 * @description ::
 * @docs        :: http://sailsjs.org/documentation/concepts/models-and-orm/models
 */
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 module.exports = {
   attributes: {
     // start relationships
