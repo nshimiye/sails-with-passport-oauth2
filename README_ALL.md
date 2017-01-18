@@ -2,7 +2,7 @@
 @Author: mars
 @Date:   2016-12-08T03:30:09-05:00
 @Last modified by:   mars
-@Last modified time: 2017-01-10T12:18:33-05:00
+@Last modified time: 2017-01-18T14:05:24-05:00
 -->
 
 # sails-with-passport-oauth2
@@ -24,7 +24,7 @@ sails new sails-with-passport-oauth2
 
 * Install passport related packages
 ```sh
-npm install bcrypt passport passport-local passport-google-oauth --save
+npm install bcryptjs passport passport-local passport-google-oauth --save
 ```
 
 * Follow instructions from [sails-with-passport](https://github.com/nshimiye/sails-with-passport-oauth2) to setup passport
